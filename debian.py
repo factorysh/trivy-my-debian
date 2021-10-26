@@ -24,6 +24,7 @@ class TrivyDebian:
         self._n = None
 
     def name(self):
+        "Debian name"
         if self._n is None:
             self._n = self.data["Metadata"]["OS"]["Name"].split(".")[0]
         return DEBIANS[self._n]
@@ -45,9 +46,18 @@ if __name__ == "__main__":
     name = td.name()
     for cve in td.cve():
         package, info = d.cve(cve["VulnerabilityID"])
-        pprint(cve)
+        if package in ["vim"]:
+            continue
+        print('#', package)
         if name in info["releases"]:
-            pprint(info["releases"][name])
+            release = info["releases"][name]
+            if release['urgency'] == 'unimportant':
+                continue
+            print("## Debian", name)
+            pprint(release)
         else:
+            print("## Debian", name)
             pprint(info["releases"])
+        print("## Trivy")
+        pprint(cve)
         print("\n\n")
