@@ -20,7 +20,7 @@ class DB:
 
 
 class TrivyDebian:
-    def __init__(self, db: DB, not_package=None, not_severity=None):
+    def __init__(self, db: DB, not_package=None, not_severity=None, debian_minor=True):
         self.db = db
         if not_package is None:
             self.not_package = []
@@ -30,6 +30,7 @@ class TrivyDebian:
             self.not_severity = []
         else:
             self.not_severity = not_severity
+        self.debian_minor = debian_minor
 
     def scan(self, trivy_data: dict):
         s = TrivyScan(trivy_data)
@@ -41,6 +42,8 @@ class TrivyDebian:
                 if package in self.not_package:
                     continue
                 ticket = info["releases"].get(debian)
+                if not self.debian_minor and ticket is not None and ticket.get('nodsa') == 'Minor issue':
+                    continue
                 yield cve, package, info, ticket
 
 
@@ -71,7 +74,10 @@ if __name__ == "__main__":
     import os, sys
     from pprint import pprint
 
-    td = TrivyDebian(DB(os.getenv("DB")), not_package=["vim"], not_severity=["LOW"])
+    td = TrivyDebian(DB(os.getenv("DB")),
+                     not_package=["vim", "systemd"],
+                     not_severity=["LOW"],
+                     debian_minor=False)
     for cve, package, info, ticket in td.scan(json.load(sys.stdin)):
         print("#", cve["VulnerabilityID"])
         print("##", package)
