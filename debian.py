@@ -47,6 +47,8 @@ class TrivyDebian:
                     continue
                 if not self.debian_minor and ticket is not None and ticket.get('nodsa') == 'Minor issue':
                     continue
+                if cve['PkgName'] != package:
+                    continue
                 packages.append((cve, package, info, ticket))
             for package in packages:
                 yield package
