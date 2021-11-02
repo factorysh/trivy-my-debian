@@ -80,7 +80,7 @@ if __name__ == "__main__":
     from pprint import pprint
 
     td = TrivyDebian(DB(os.getenv("DB")),
-                     not_package=["vim", "systemd"],
+                     not_package=["vim", "systemd", "rsyslog"],
                      not_severity=["LOW"],
                      debian_minor=False)
     for cve, package, info, ticket in td.scan(json.load(sys.stdin)):
