@@ -36,15 +36,20 @@ class TrivyDebian:
         s = TrivyScan(trivy_data)
         debian = s.debian_version()
         for cve in s.cve():
+            packages = []
             if cve["Severity"] in self.not_severity:
                 continue
             for package, info in self.db.cve(cve["VulnerabilityID"]):
                 if package in self.not_package:
                     continue
                 ticket = info["releases"].get(debian)
+                if ticket is None:
+                    continue
                 if not self.debian_minor and ticket is not None and ticket.get('nodsa') == 'Minor issue':
                     continue
-                yield cve, package, info, ticket
+                packages.append((cve, package, info, ticket))
+            for package in packages:
+                yield package
 
 
 class TrivyScan:
