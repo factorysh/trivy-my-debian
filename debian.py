@@ -1,5 +1,6 @@
 import ijson
 import json
+from version import Version
 
 
 DEBIANS = {"12": "bookworm", "11": "bullseye", "10": "buster", "9": "stretch"}
@@ -48,6 +49,8 @@ class TrivyDebian:
                 if not self.debian_minor and ticket is not None and ticket.get('nodsa') == 'Minor issue':
                     continue
                 if cve['PkgName'] != package:
+                    continue
+                if Version(cve['InstalledVersion']) >= Version(cve['FixedVersion']):
                     continue
                 packages.append((cve, package, info, ticket))
             for package in packages:
