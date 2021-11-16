@@ -1,5 +1,8 @@
-import ijson
 import json
+import logging
+
+import ijson
+
 from version import Version
 
 
@@ -32,6 +35,7 @@ class TrivyDebian:
         else:
             self.not_severity = not_severity
         self.debian_minor = debian_minor
+        self.logger = logging.getLogger(__name__)
 
     def scan(self, trivy_data: dict):
         s = TrivyScan(trivy_data)
@@ -39,18 +43,24 @@ class TrivyDebian:
         for cve in s.cve():
             packages = []
             if cve["Severity"] in self.not_severity:
+                self.logger.info(cve['VulnerabilityID'], "to low :", cve["Severity"])
                 continue
             for package, info in self.db.cve(cve["VulnerabilityID"]):
                 if package in self.not_package:
+                    (cve["VulnerabilityID"], "banned package :", package)
                     continue
                 ticket = info["releases"].get(debian)
                 if ticket is None:
+                    self.logger.info(cve["VulnerabilityID"], "without debian ticket :", package)
                     continue
                 if not self.debian_minor and ticket is not None and ticket.get('nodsa') == 'Minor issue':
+                    self.logger.info(cve["VulnerabilityID"], "debian minor :", package)
                     continue
                 if cve['PkgName'] != package:
+                    self.logger.info(cve["VulnerabilityID"], "debian name mismatch :", cve['PkgName'], "vs", package)
                     continue
-                if Version(cve['InstalledVersion']) >= Version(cve['FixedVersion']):
+                if 'FixedVersion' in cve and Version(cve['InstalledVersion']) >= Version(cve['FixedVersion']):
+                    self.logger.info(cve["VulnerabilityID"], "better version :", cve["InstalledVersion"], "vs", cve['FixedVersion'])
                     continue
                 packages.append((cve, package, info, ticket))
             for package in packages:
@@ -88,6 +98,10 @@ if __name__ == "__main__":
                      not_package=["vim", "systemd", "rsyslog"],
                      not_severity=["LOW"],
                      debian_minor=False)
+    td.logger.setLevel(logging.INFO)
+    ch = logging.StreamHandler()
+    ch.setLevel(logging.DEBUG)
+
     for cve, package, info, ticket in td.scan(json.load(sys.stdin)):
         print("#", cve["VulnerabilityID"])
         print("##", package)
