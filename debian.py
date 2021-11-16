@@ -43,7 +43,7 @@ class TrivyDebian:
         for cve in s.cve():
             packages = []
             if cve["Severity"] in self.not_severity:
-                self.logger.info(cve['VulnerabilityID'], "to low :", cve["Severity"])
+                self.logger.info(cve["VulnerabilityID"], "to low :", cve["Severity"])
                 continue
             for package, info in self.db.cve(cve["VulnerabilityID"]):
                 if package in self.not_package:
@@ -51,16 +51,36 @@ class TrivyDebian:
                     continue
                 ticket = info["releases"].get(debian)
                 if ticket is None:
-                    self.logger.info(cve["VulnerabilityID"], "without debian ticket :", package)
+                    self.logger.info(
+                        cve["VulnerabilityID"], "without debian ticket :", package
+                    )
                     continue
-                if not self.debian_minor and ticket is not None and ticket.get('nodsa') == 'Minor issue':
+                if (
+                    not self.debian_minor
+                    and ticket is not None
+                    and ticket.get("nodsa") == "Minor issue"
+                ):
                     self.logger.info(cve["VulnerabilityID"], "debian minor :", package)
                     continue
-                if cve['PkgName'] != package:
-                    self.logger.info(cve["VulnerabilityID"], "debian name mismatch :", cve['PkgName'], "vs", package)
+                if cve["PkgName"] != package:
+                    self.logger.info(
+                        cve["VulnerabilityID"],
+                        "debian name mismatch :",
+                        cve["PkgName"],
+                        "vs",
+                        package,
+                    )
                     continue
-                if 'FixedVersion' in cve and Version(cve['InstalledVersion']) >= Version(cve['FixedVersion']):
-                    self.logger.info(cve["VulnerabilityID"], "better version :", cve["InstalledVersion"], "vs", cve['FixedVersion'])
+                if "FixedVersion" in cve and Version(
+                    cve["InstalledVersion"]
+                ) >= Version(cve["FixedVersion"]):
+                    self.logger.info(
+                        cve["VulnerabilityID"],
+                        "better version :",
+                        cve["InstalledVersion"],
+                        "vs",
+                        cve["FixedVersion"],
+                    )
                     continue
                 packages.append((cve, package, info, ticket))
             for package in packages:
@@ -94,10 +114,12 @@ if __name__ == "__main__":
     import os, sys
     from pprint import pprint
 
-    td = TrivyDebian(DB(os.getenv("DB")),
-                     not_package=["vim", "systemd", "rsyslog"],
-                     not_severity=["LOW"],
-                     debian_minor=False)
+    td = TrivyDebian(
+        DB(os.getenv("DB")),
+        not_package=["vim", "systemd", "rsyslog"],
+        not_severity=["LOW"],
+        debian_minor=False,
+    )
     td.logger.setLevel(logging.INFO)
     ch = logging.StreamHandler()
     ch.setLevel(logging.DEBUG)
