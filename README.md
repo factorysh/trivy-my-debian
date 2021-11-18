@@ -12,6 +12,12 @@ Fetch a fresh Debian CVE dump.
 curl -o debian_cve.json https://security-tracker.debian.org/tracker/data/json
 ```
 
+Get a fresh Trivy database
+
+```bash
+trivy image --download-db-only
+```
+
 Use Trivy for an analyse, without garbage in STDOUT, in json format.
 
 ```bash
