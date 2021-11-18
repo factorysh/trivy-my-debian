@@ -1,1 +1,3 @@
 ijson
+fastapi
+uvicorn[standard]

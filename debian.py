@@ -3,13 +3,23 @@ import pickle
 import logging
 import dbm
 from pathlib import Path
+from typing import List
 
 import ijson
+from pydantic import BaseModel
 
 from version import Version
 
 
 DEBIANS = {"12": "bookworm", "11": "bullseye", "10": "buster", "9": "stretch"}
+
+
+class Trivy(BaseModel):
+    SchemaVersion: int
+    ArtifactName: str
+    ArtifactType: str
+    Metadata: dict
+    Results: List[dict]
 
 
 class DB:
@@ -57,7 +67,7 @@ class TrivyDebian:
         self.debian_minor = debian_minor
         self.logger = logging.getLogger(__name__)
 
-    def scan(self, trivy_data: dict):
+    def scan(self, trivy_data: Trivy):
         s = TrivyScan(trivy_data)
         debian = s.debian_version()
         for cve in s.cve():
@@ -110,8 +120,8 @@ class TrivyDebian:
 class TrivyScan:
     "Read a Trivy JSON dump"
 
-    def __init__(self, data):
-        if data["Metadata"]["OS"]["Family"] != "debian":
+    def __init__(self, data: Trivy):
+        if data.Metadata["OS"]["Family"] != "debian":
             raise Exception("Not a Debian")
         self.data = data
         self._n = None
@@ -119,11 +129,11 @@ class TrivyScan:
     def debian_version(self):
         "Debian version name"
         if self._n is None:
-            self._n = self.data["Metadata"]["OS"]["Name"].split(".")[0]
+            self._n = self.data.Metadata["OS"]["Name"].split(".")[0]
         return DEBIANS[self._n]
 
     def cve(self):
-        for result in self.data["Results"]:
+        for result in self.data.Results:
             if result["Type"] != "debian":
                 continue
             for vulnerability in result["Vulnerabilities"]:
