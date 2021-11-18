@@ -6,5 +6,5 @@ venv:
 clean:
 	rm -ef venv
 
-web:
-	uvicorn main:app --reload
+web: venv
+	./venv/bin/uvicorn main:app --reload

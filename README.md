@@ -24,9 +24,15 @@ Use Trivy for an analyse, without garbage in STDOUT, in json format.
 trivy --quiet image --no-progress  --format json debian:11
 ```
 
-One fat command, inside a virtualenv
+Launch the webserver
 
 ```bash
-trivy --quiet image --no-progress  --format json debian:11 | DB=/tmp/debian_cve.json python debian.py
+make web
+```
+
+Analyze your trivy report, through `curl` (and `jq`)
+
+```bash
+trivy --quiet image --no-progress  --format json bearstech/node:16  | curl --silent -H "Content-Type: application/json" -X POST --data-binary @- http://localhost:8000/trivy/debian | jq .
 ```
 
