@@ -1,5 +1,8 @@
 import json
+import pickle
 import logging
+import dbm
+from pathlib import Path
 
 import ijson
 
@@ -12,15 +15,32 @@ DEBIANS = {"12": "bookworm", "11": "bullseye", "10": "buster", "9": "stretch"}
 class DB:
     "Debian CVE database"
 
-    def __init__(self, path: str):
-        self.f = open(path, "r")
+    def __init__(self, json_path: str, db_path: str):
+        d = Path(db_path)
+        j = Path(json_path)
+        do_it = not d.is_file()
+        if not do_it:
+            do_it = j.stat().st_mtime > d.stat().st_mtime
+        if do_it:
+            f = open(json_path, "r")
+            db = dbm.open(db_path, "c")
+            for k, v in ijson.kvitems(f, ""):
+                for cve_id, cve in v.items():
+                    if cve_id in db:
+                        data = pickle.loads(db[cve_id])
+                    else:
+                        data = []
+                    data.append([k, cve])
+                    db[cve_id] = pickle.dumps(data)
+            f.close()
+            db.close()
+        self.db = dbm.open(db_path, "r")
 
     def cve(self, cve_id):
         "return data and package name from a CVE id"
-        self.f.seek(0)
-        for k, v in ijson.kvitems(self.f, ""):
-            if cve_id in v:
-                yield k, v[cve_id]
+        if cve_id in self.db:
+            for cve in pickle.loads(self.db[cve_id]):
+                yield tuple(cve)
 
 
 class TrivyDebian:
@@ -115,7 +135,7 @@ if __name__ == "__main__":
     from pprint import pprint
 
     td = TrivyDebian(
-        DB(os.getenv("DB")),
+        DB(os.getenv("DB"), "./debian.db"),
         not_package=["vim", "systemd", "rsyslog"],
         not_severity=["LOW"],
         debian_minor=False,
