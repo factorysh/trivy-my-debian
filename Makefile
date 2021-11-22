@@ -8,3 +8,6 @@ clean:
 
 web: venv
 	./venv/bin/uvicorn main:app --reload
+
+update:
+	curl --silent -o debian_cve.json https://security-tracker.debian.org/tracker/data/json
