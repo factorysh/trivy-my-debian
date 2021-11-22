@@ -11,3 +11,7 @@ web: venv
 
 update:
 	curl --silent -o debian_cve.json https://security-tracker.debian.org/tracker/data/json
+
+image:
+	docker build -t trivy-my-debian \
+		.

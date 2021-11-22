@@ -1,0 +1,9 @@
+*.json
+*.db
+__pycache__
+.git
+venv
+README.md
+LICENSE
+Dockerfile
+test_*
