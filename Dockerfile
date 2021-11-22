@@ -14,4 +14,4 @@ COPY --from=dev /opt/trivy-my-debian/ /opt/trivy-my-debian/
 USER trivy
 WORKDIR /opt/trivy-my-debian/
 EXPOSE 8000
-CMD ["/opt/trivy-my-debian/venv/uvicorn", "--host", "0.0.0.0", "main:app"]
+CMD ["/opt/trivy-my-debian/venv/bin/uvicorn", "--host", "0.0.0.0", "main:app"]
