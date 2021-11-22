@@ -8,7 +8,7 @@ from debian import DB, TrivyDebian, Trivy
 
 
 td = TrivyDebian(
-    DB(os.getenv("DB"), "./debian.db"),
+    DB(os.getenv("DB"), os.getenv("DB_CACHE", "./debian.db")),
     not_package=["vim", "systemd", "rsyslog"],
     not_severity=["LOW"],
     debian_minor=False,
