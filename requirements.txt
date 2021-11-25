@@ -1,4 +1,5 @@
 ijson
 fastapi
 uvicorn[standard]
+uvloop
 pydantic_yaml[ruamel]
