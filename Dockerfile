@@ -7,7 +7,8 @@ RUN cd /opt/trivy-my-debian/ \
 
 FROM bearstech/python:3.9
 
-RUN useradd -ms /bin/bash trivy \
+ARG UID=501
+RUN useradd -ms /bin/bash --uid=${UID} trivy \
         && mkdir /data \
         && chown trivy /data \
         && chmod 775 /data
