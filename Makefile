@@ -9,7 +9,7 @@ clean:
 	rm -ef venv
 
 web: venv
-	./venv/bin/uvicorn main:app --reload
+	CONFIG=./config.yml ./venv/bin/uvicorn main:app --reload
 
 update:
 	curl --silent -o debian_cve.json https://security-tracker.debian.org/tracker/data/json

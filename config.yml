@@ -1,0 +1,11 @@
+---
+
+not_package:
+  - vim
+  - systemd
+  - rsyslog
+
+not_severity:
+  - LOW
+
+debian_minor: true
