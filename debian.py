@@ -14,12 +14,24 @@ from version import Version
 DEBIANS = {"12": "bookworm", "11": "bullseye", "10": "buster", "9": "stretch"}
 
 
+class Result(BaseModel):
+    Target: str
+    Class: str
+    Type: str
+    Vulnerabilities: List[dict]
+
+
 class Trivy(BaseModel):
     SchemaVersion: int
     ArtifactName: str
     ArtifactType: str
     Metadata: dict
-    Results: List[dict]
+    Results: List[Result]
+
+
+class Vulnerability(BaseModel):
+    VulnerabilityID: str
+    Severity: str
 
 
 class DB:
@@ -28,6 +40,8 @@ class DB:
     def __init__(self, json_path: str, db_path: str):
         d = Path(db_path)
         j = Path(json_path)
+        if not j.is_file():
+            raise Exception("JSON file not found %s" % json_path)
         do_it = not d.is_file()
         if not do_it:
             do_it = j.stat().st_mtime > d.stat().st_mtime
@@ -120,7 +134,8 @@ class TrivyDebian:
 class TrivyScan:
     "Read a Trivy JSON dump"
 
-    def __init__(self, data: Trivy):
+    def __init__(self, data: dict):
+        data = Trivy(**data)
         if data.Metadata["OS"]["Family"] != "debian":
             raise Exception("Not a Debian")
         self.data = data
@@ -134,9 +149,9 @@ class TrivyScan:
 
     def cve(self):
         for result in self.data.Results:
-            if result["Type"] != "debian":
+            if result.Type != "debian":
                 continue
-            for vulnerability in result["Vulnerabilities"]:
+            for vulnerability in result.Vulnerabilities:
                 yield vulnerability
 
 
@@ -145,7 +160,7 @@ if __name__ == "__main__":
     from pprint import pprint
 
     td = TrivyDebian(
-        DB(os.getenv("DB"), "./debian.db"),
+        DB(os.getenv("DB", "./debian_cve.json"), "./debian.db"),
         not_package=["vim", "systemd", "rsyslog"],
         not_severity=["LOW"],
         debian_minor=False,
